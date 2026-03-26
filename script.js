@@ -9,12 +9,19 @@ let camera = new THREE.PerspectiveCamera(
 
 camera.position.z = 3;
 
-let renderer = new THREE.WebGLRenderer({ antialias: true });
+let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // added alpha:true for cleaner background blending
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Handle window resizing smoothly
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
 // Light
-let light = new THREE.HemisphereLight(0xffffff, 0x444444);
+let light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
 scene.add(light);
 
 // Loader
@@ -27,6 +34,8 @@ loader.load('portalView.glb', (gltf) => {
 
 // Upload support
 document.getElementById('upload').addEventListener('change', (e) => {
+  if(e.target.files.length === 0) return;
+  
   let file = e.target.files[0];
   let url = URL.createObjectURL(file);
 
@@ -45,6 +54,11 @@ navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
   video.play();
 });
 
+// UI Elements for Status
+const statusBadge = document.getElementById('status-badge');
+const statusText = document.getElementById('status-text');
+let isTrackingActive = false;
+
 // MediaPipe FaceMesh
 const faceMesh = new FaceMesh({
   locateFile: (file) =>
@@ -60,8 +74,14 @@ faceMesh.setOptions({
 
 faceMesh.onResults((results) => {
   if (results.multiFaceLandmarks.length > 0) {
-    let face = results.multiFaceLandmarks[0];
+    // Update UI status to Green/Ready on first successful track
+    if (!isTrackingActive) {
+      statusBadge.classList.add('status-ready');
+      statusText.innerText = "Tracking Active";
+      isTrackingActive = true;
+    }
 
+    let face = results.multiFaceLandmarks[0];
     let nose = face[1];
 
     let x = (nose.x - 0.5) * 4;
