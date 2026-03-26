@@ -89,14 +89,14 @@ faceMesh.onResults((results) => {
     let face = results.multiFaceLandmarks[0];
     let nose = face[1];
 
-    // 1. FIX THE REVERSED MOVEMENT & SENSITIVITY
-    // - Added the negative sign back to the X-axis so it matches physical head movement.
-    // - Dropped the sensitivity from 1.5 to 0.8 for subtle, realistic parallax.
-    let rawX = (nose.x - 0.5) * 1.0; 
-    let rawY = (nose.y - 0.5) * 1.0;
+    // 1. Map FaceMesh coordinates to physical movement
+    // Reduced sensitivity to 1.5 (from 4.0) for realism
+    // X is POSITIVE now to fix the reversed "mirror" effect
+    let rawX = (nose.x - 0.5) * 1.5; 
+    let rawY = -(nose.y - 0.5) * 1.5;
     
-    // 2. Reduce Z-depth pushing so it doesn't warp when you lean in
-    let rawZ = 2.0 + (face[10].z * -0.8); 
+    // Minimal Z shifting. The illusion relies primarily on X/Y parallax
+    let rawZ = 2.0 + (face[10].z * -1.0); 
 
     targetPos.set(rawX, rawY, Math.max(0.5, rawZ));
   }
