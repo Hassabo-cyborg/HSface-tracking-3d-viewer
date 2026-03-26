@@ -92,8 +92,8 @@ faceMesh.onResults((results) => {
     // 1. Map FaceMesh coordinates to physical movement
     // Reduced sensitivity to 1.5 (from 4.0) for realism
     // X is POSITIVE now to fix the reversed "mirror" effect
-    let rawX = (nose.x - 0.5) * 1.5; 
-    let rawY = (nose.y - 0.5) * 1.5;
+    let rawX = -(nose.x - 0.5) * 1.5; 
+    let rawY = -(nose.y - 0.5) * 1.5;
     
     // Minimal Z shifting. The illusion relies primarily on X/Y parallax
     let rawZ = 2.0 + (face[10].z * -1.0); 
