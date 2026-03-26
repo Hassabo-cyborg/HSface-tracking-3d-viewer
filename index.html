@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Face Tracking Viewer</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #upload { position: absolute; z-index: 10; }
+  </style>
+</head>
+<body>
+
+<input type="file" id="upload" accept=".glb,.gltf" />
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/examples/js/loaders/GLTFLoader.js"></script>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+</html>
