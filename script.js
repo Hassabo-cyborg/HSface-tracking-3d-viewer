@@ -92,11 +92,11 @@ faceMesh.onResults((results) => {
     // 1. FIX THE REVERSED MOVEMENT & SENSITIVITY
     // - Added the negative sign back to the X-axis so it matches physical head movement.
     // - Dropped the sensitivity from 1.5 to 0.8 for subtle, realistic parallax.
-    let rawX = -(nose.x - 0.5) * 0.8; 
-    let rawY = -(nose.y - 0.5) * 0.8;
+    let rawX = (nose.x - 0.5) * 1.0; 
+    let rawY = (nose.y - 0.5) * 1.0;
     
     // 2. Reduce Z-depth pushing so it doesn't warp when you lean in
-    let rawZ = 2.0 + (face[10].z * -0.5); 
+    let rawZ = 2.0 + (face[10].z * -0.8); 
 
     targetPos.set(rawX, rawY, Math.max(0.5, rawZ));
   }
