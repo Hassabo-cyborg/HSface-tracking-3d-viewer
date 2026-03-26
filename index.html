@@ -1,24 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>3D Face Tracking Viewer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial 3D Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  
   <style>
-    body { margin: 0; overflow: hidden; }
-    #upload { position: absolute; z-index: 10; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #0a0a0a; /* Deep dark background */
+      font-family: 'Inter', sans-serif;
+      color: #ffffff;
+    }
+
+    /* Glassmorphism Floating Panel */
+    #ui-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(25, 25, 25, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 24px;
+      border-radius: 16px;
+      width: 300px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    p.subtitle {
+      margin: 0 0 20px 0;
+      font-size: 0.85rem;
+      color: #a0a0a0;
+      line-height: 1.4;
+    }
+
+    /* Custom File Upload Button */
+    input[type="file"] {
+      display: none; /* Hide the ugly default input */
+    }
+
+    .custom-upload-btn {
+      display: inline-block;
+      width: 100%;
+      padding: 12px 0;
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      color: #000;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .custom-upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+    }
+
+    /* Status Indicator */
+    #status-badge {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #ffaa00; /* Yellow for loading */
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 12px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #ffaa00;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Status utility classes to change via JS */
+    .status-ready { color: #00e676 !important; }
+    .status-ready .dot { background-color: #00e676 !important; animation: none; }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
   </style>
 </head>
 <body>
 
-<input type="file" id="upload" accept=".glb,.gltf" />
+  <div id="ui-container">
+    <h1>Spatial 3D Viewer</h1>
+    <p class="subtitle">Move your head to shift the camera perspective in real-time. Works best in well-lit environments.</p>
+    
+    <label for="upload" class="custom-upload-btn">
+      Upload .GLB / .GLTF
+    </label>
+    <input type="file" id="upload" accept=".glb,.gltf" />
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.158/examples/js/loaders/GLTFLoader.js"></script>
+    <div id="status-badge">
+      <div class="dot"></div>
+      <span id="status-text">Initializing Camera...</span>
+    </div>
+  </div>
 
-<!-- MediaPipe -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
 
-<script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script src="script.js"></script>
 
 </body>
 </html>
