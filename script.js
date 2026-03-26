@@ -21,7 +21,7 @@ scene.add(light);
 let loader = new THREE.GLTFLoader();
 
 // Load default model
-loader.load('model.glb', (gltf) => {
+loader.load('portalView.glb', (gltf) => {
   scene.add(gltf.scene);
 });
 
