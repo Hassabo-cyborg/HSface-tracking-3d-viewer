@@ -1,7 +1,7 @@
 let scene = new THREE.Scene();
 
-// We initialize a standard camera, but we will overwrite its projection matrix manually every frame
-let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+// We initialize a standard camera, but we overwrite its projection matrix manually every frame
+let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
 
 let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -11,18 +11,25 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Lighting
-let light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+// Lighting - Boosted to make the depth pop
+let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1.2);
 scene.add(light);
-let dirLight = new THREE.DirectionalLight(0xffffff, 1);
-dirLight.position.set(0, 5, 5);
+let dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+dirLight.position.set(2, 5, 5);
 scene.add(dirLight);
+
+// --- THE SECRET TO THE BOX ILLUSION ---
+// We create a container and push it BACKWARD into the screen.
+// This is what creates the "looking through a window" depth.
+let modelContainer = new THREE.Group();
+modelContainer.position.z = -1.5; // Push it 1.5 meters inside the monitor
+scene.add(modelContainer);
 
 // Loader
 let loader = new THREE.GLTFLoader();
 
 loader.load('portalView.glb', (gltf) => {
-  scene.add(gltf.scene);
+  modelContainer.add(gltf.scene);
 });
 
 document.getElementById('upload').addEventListener('change', (e) => {
@@ -31,10 +38,11 @@ document.getElementById('upload').addEventListener('change', (e) => {
   let url = URL.createObjectURL(file);
 
   loader.load(url, (gltf) => {
-    scene.clear();
-    scene.add(light);
-    scene.add(dirLight);
-    scene.add(gltf.scene);
+    // Clear the container, not the whole scene, so we keep our lights
+    while(modelContainer.children.length > 0){ 
+        modelContainer.remove(modelContainer.children[0]); 
+    }
+    modelContainer.add(gltf.scene);
   });
 });
 
@@ -51,13 +59,12 @@ const statusText = document.getElementById('status-text');
 let isTrackingActive = false;
 
 // --- 3D ILLUSION CALIBRATION --- //
-// Define the physical size of the screen window in our 3D world
 const screenWidth = 2.0; 
 let screenHeight = screenWidth * (window.innerHeight / window.innerWidth);
 
-// Smoothing variables to eliminate jitter
-let currentPos = new THREE.Vector3(0, 0, 3);
-let targetPos = new THREE.Vector3(0, 0, 3);
+// Start the camera at a normal viewing distance (Z=2)
+let currentPos = new THREE.Vector3(0, 0, 2);
+let targetPos = new THREE.Vector3(0, 0, 2);
 
 // FaceMesh Setup
 const faceMesh = new FaceMesh({
@@ -83,14 +90,14 @@ faceMesh.onResults((results) => {
     let nose = face[1];
 
     // 1. Map FaceMesh coordinates to physical movement
-    // X is inverted so it acts like a mirror
-    let rawX = (nose.x - 0.5) * -4.0; 
-    let rawY = -(nose.y - 0.5) * 4.0;
+    // Reduced sensitivity to 1.5 (from 4.0) for realism
+    // X is POSITIVE now to fix the reversed "mirror" effect
+    let rawX = (nose.x - 0.5) * 1.5; 
+    let rawY = -(nose.y - 0.5) * 1.5;
     
-    // Z depth scaling (FaceMesh Z is relative, we amplify it for depth perception)
-    let rawZ = 2.5 + (face[10].z * -8.0); 
+    // Minimal Z shifting. The illusion relies primarily on X/Y parallax
+    let rawZ = 2.0 + (face[10].z * -1.0); 
 
-    // Constrain Z so the camera never clips through the monitor plane (Z=0)
     targetPos.set(rawX, rawY, Math.max(0.5, rawZ));
   }
 });
@@ -106,21 +113,21 @@ mpCamera.start();
 function animate() {
   requestAnimationFrame(animate);
 
-  // 1. LERP (Linear Interpolation) to kill all jitter
-  currentPos.lerp(targetPos, 0.15); // 0.15 is the smoothing factor. Lower = smoother but laggier.
+  // Smooth the movement heavily to feel like physical mass
+  currentPos.lerp(targetPos, 0.12); 
   
-  // 2. Move the camera, but DO NOT rotate it. Keep it looking straight ahead.
+  // Camera strictly follows position, ZERO rotation
   camera.position.copy(currentPos);
   camera.rotation.set(0, 0, 0);
 
-  // 3. OFF-AXIS PROJECTION (The Window Illusion)
+  // --- OFF-AXIS PROJECTION (The Window Illusion) ---
   screenHeight = screenWidth * (window.innerHeight / window.innerWidth);
   
-  let near = 0.1;
+  let near = 0.01; // Pulled near plane much closer to prevent clipping
   let far = 1000;
   let dist = camera.position.z;
 
-  // Calculate the physical boundaries of the screen relative to the camera's current position
+  // Calculate the physical boundaries of the screen relative to the camera
   let left = -screenWidth / 2 - camera.position.x;
   let right = screenWidth / 2 - camera.position.x;
   let bottom = -screenHeight / 2 - camera.position.y;
@@ -129,7 +136,7 @@ function animate() {
   // Scale the boundaries down to the camera's near clipping plane
   let scale = near / dist;
   
-  // Override the projection matrix entirely
+  // Override the projection matrix entirely to skew the lens
   camera.projectionMatrix.makePerspective(
     left * scale,
     right * scale,
